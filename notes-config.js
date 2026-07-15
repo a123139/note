@@ -6,6 +6,11 @@
 
 const notesConfig = [
     {
+        "type": "file",
+        "name": "CLAUDE.md",
+        "title": "CLAUDE"
+    },
+    {
         "type": "folder",
         "name": "claude code",
         "children": [
@@ -13,6 +18,11 @@ const notesConfig = [
                 "type": "file",
                 "name": "claude code.md",
                 "title": "claude code"
+            },
+            {
+                "type": "file",
+                "name": "git.md",
+                "title": "git"
             }
         ]
     },

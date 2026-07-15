@@ -110,23 +110,6 @@ const notesConfig = [
    git push origin main
    ```
 
-### 方式二：命令行方式
-
-```bash
-# 1. 添加笔记文件夹到项目目录
-
-# 2. 生成配置
-python build-config.py
-
-# 3. 启动本地服务器
-python -m http.server 8080
-
-# 4. 预览确认后推送
-git add .
-git commit -m "添加新笔记模块"
-git push origin main
-```
-
 ### 笔记文件夹结构要求
 
 ```
@@ -150,15 +133,6 @@ git push origin main
 <img src="./assets/image-xxx.png" alt="图片描述" />
 ```
 
-### 常见问题
-
-| 问题 | 原因 | 解决方法 |
-|------|------|----------|
-| 图片不显示 | 使用了绝对路径 | 运行 `python fix-images.py` |
-| 图片不显示 | 路径包含空格 | 系统已自动处理 URL 编码 |
-| 图片不显示 | 文件不存在 | 检查 `assets` 目录是否有对应图片 |
-
----
 
 ## 🌐 GitHub Pages 部署
 
@@ -168,13 +142,6 @@ git push origin main
 - **网站地址**: `https://a123139.github.io/note/`
 - **分支**: `main`
 
-### 部署步骤
-
-1. 在 GitHub 仓库 → Settings → Pages
-2. Source 选择 `main` 分支
-3. 等待 1-5 分钟自动部署
-
----
 
 ## 🔍 搜索功能
 
@@ -197,48 +164,3 @@ git push origin main
 - 桌面端：三栏布局（目录 + 内容 + 大纲）
 - 平板端：自适应布局
 - 移动端：侧边栏折叠，底部导航
-
----
-
-## 🐛 常见问题
-
-### Q1: 本地预览无法访问？
-
-- 确保端口未被占用（默认 8080）
-- 确保使用服务器访问，不要直接双击 HTML 文件
-
-### Q2: GitHub Pages 图片不显示？
-
-- 确保图片路径使用相对路径 `./assets/`
-- 运行 `python fix-images.py` 修复路径
-- 等待 GitHub Pages 部署完成
-
-### Q3: 新增笔记不显示？
-
-- 运行 `python build-config.py` 重新生成配置
-- 刷新浏览器
-
----
-
-## 📌 快捷键
-
-| 快捷键 | 功能 |
-|--------|------|
-| 无 | 暂无 |
-
----
-
-## 📅 版本历史
-
-| 日期 | 版本 | 更新内容 |
-|------|------|----------|
-| 2026-07-15 | v1.0 | 初始版本，基础功能 |
-| 2026-07-15 | v1.1 | 添加大纲导航功能 |
-| 2026-07-15 | v1.2 | 修复图片路径 URL 编码问题 |
-
----
-
-## 📞 联系信息
-
-- GitHub: [https://github.com/a123139](https://github.com/a123139)
-- 网站: [https://a123139.github.io/note/](https://a123139.github.io/note/)
