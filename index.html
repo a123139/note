@@ -739,18 +739,22 @@
         }
 
         function processImagePaths(text, basePath) {
+            const encodedBasePath = basePath.split('/').map(encodeURIComponent).join('/');
+            
             let result = text.replace(/(!\[.*?\]\()(\.\/|)(.*?)(\))/g, function(match, p1, p2, p3, p4) {
                 if (p3.startsWith('http://') || p3.startsWith('https://')) {
                     return match;
                 }
-                return p1 + basePath + p3 + p4;
+                const encodedPath = p3.split('/').map(encodeURIComponent).join('/');
+                return p1 + encodedBasePath + encodedPath + p4;
             });
 
             result = result.replace(/(<img[^>]*?src=")(\.\/|)(.*?)(")/gi, function(match, p1, p2, p3, p4) {
                 if (p3.startsWith('http://') || p3.startsWith('https://') || p3.startsWith('data:')) {
                     return match;
                 }
-                return p1 + basePath + p3 + p4;
+                const encodedPath = p3.split('/').map(encodeURIComponent).join('/');
+                return p1 + encodedBasePath + encodedPath + p4;
             });
 
             return result;
