@@ -33,6 +33,76 @@
             transition: transform 0.3s ease;
         }
 
+        .outline-panel {
+            width: 250px;
+            background: #fff;
+            border-left: 1px solid #d0d7de;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .outline-header {
+            padding: 16px;
+            border-bottom: 1px solid #d0d7de;
+            background: #f6f8fa;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #24292f;
+        }
+
+        .outline-header i {
+            color: #667eea;
+        }
+
+        .outline-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .outline-tree::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .outline-tree::-webkit-scrollbar-thumb {
+            background: #d0d7de;
+            border-radius: 3px;
+        }
+
+        .outline-item {
+            padding: 4px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #57606a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .outline-item:hover {
+            background: #f3f4f6;
+            color: #24292f;
+        }
+
+        .outline-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .outline-item.h1 { padding-left: 16px; font-size: 14px; }
+        .outline-item.h2 { padding-left: 28px; font-size: 13px; }
+        .outline-item.h3 { padding-left: 40px; font-size: 12px; }
+        .outline-item.h4 { padding-left: 52px; font-size: 12px; }
+        .outline-item.h5 { padding-left: 64px; font-size: 11px; }
+        .outline-item.h6 { padding-left: 76px; font-size: 11px; }
+
         .sidebar-header {
             padding: 20px;
             border-bottom: 1px solid #d0d7de;
@@ -515,6 +585,15 @@
         </div>
     </div>
 
+    <div class="outline-panel" id="outlinePanel">
+        <div class="outline-header">
+            <i class="fas fa-list"></i> 大纲
+        </div>
+        <div class="outline-tree" id="outlineTree">
+            <div class="outline-item" style="text-align: center; color: #9ca3af;">选择笔记查看大纲</div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="notes-config.js"></script>
@@ -528,6 +607,8 @@
         const menuBtn = document.getElementById('menuBtn');
         const backBtn = document.getElementById('backBtn');
         const forwardBtn = document.getElementById('forwardBtn');
+        const outlinePanel = document.getElementById('outlinePanel');
+        const outlineTree = document.getElementById('outlineTree');
 
         let currentNote = null;
         let history = [];
@@ -638,6 +719,9 @@
                 document.querySelectorAll('#content pre code').forEach(block => {
                     hljs.highlightElement(block);
                 });
+
+                buildOutline();
+                setupOutlineScrollHighlight();
 
                 currentNote = { path, title };
 
@@ -770,6 +854,87 @@
         function updateNavButtons() {
             backBtn.style.opacity = historyIndex > 0 ? '1' : '0.5';
             forwardBtn.style.opacity = historyIndex < history.length - 1 ? '1' : '0.5';
+        }
+
+        function buildOutline() {
+            const headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            
+            if (headings.length === 0) {
+                outlineTree.innerHTML = '<div class="outline-item" style="text-align: center; color: #9ca3af;">暂无大纲</div>';
+                return;
+            }
+
+            outlineTree.innerHTML = '';
+
+            headings.forEach((heading, index) => {
+                const level = heading.tagName.toLowerCase();
+                const text = heading.textContent.trim();
+                const id = 'heading-' + index;
+                
+                heading.id = id;
+
+                const item = document.createElement('div');
+                item.className = `outline-item ${level}`;
+                item.textContent = text;
+                item.dataset.headingId = id;
+
+                item.addEventListener('click', () => {
+                    const targetHeading = document.getElementById(id);
+                    if (targetHeading) {
+                        targetHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        
+                        document.querySelectorAll('.outline-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                    }
+                });
+
+                outlineTree.appendChild(item);
+            });
+        }
+
+        let outlineScrollTimeout = null;
+
+        function setupOutlineScrollHighlight() {
+            const contentArea = document.getElementById('contentArea');
+            
+            contentArea.removeEventListener('scroll', handleOutlineScroll);
+            contentArea.addEventListener('scroll', handleOutlineScroll);
+        }
+
+        function handleOutlineScroll() {
+            if (outlineScrollTimeout) {
+                clearTimeout(outlineScrollTimeout);
+            }
+
+            outlineScrollTimeout = setTimeout(() => {
+                const headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                const scrollTop = document.getElementById('contentArea').scrollTop;
+                const contentArea = document.getElementById('contentArea');
+                const viewportHeight = contentArea.clientHeight;
+
+                let currentHeadingId = null;
+
+                headings.forEach((heading, index) => {
+                    const rect = heading.getBoundingClientRect();
+                    const contentRect = contentArea.getBoundingClientRect();
+                    const headingTop = rect.top - contentRect.top;
+
+                    if (headingTop <= viewportHeight / 3) {
+                        currentHeadingId = 'heading-' + index;
+                    }
+                });
+
+                if (currentHeadingId) {
+                    document.querySelectorAll('.outline-item').forEach(item => {
+                        item.classList.toggle('active', item.dataset.headingId === currentHeadingId);
+                    });
+
+                    const activeItem = document.querySelector('.outline-item.active');
+                    if (activeItem) {
+                        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            }, 100);
         }
 
         searchInput.addEventListener('input', (e) => {
