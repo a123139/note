@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人笔记</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            line-height: 1.6;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #fff;
+            border-right: 1px solid #d0d7de;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #d0d7de;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            padding: 12px;
+            border-bottom: 1px solid #d0d7de;
+            background: #f6f8fa;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .nav-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .nav-tree::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .nav-tree::-webkit-scrollbar-thumb {
+            background: #d0d7de;
+            border-radius: 3px;
+        }
+
+        .nav-folder {
+            margin-bottom: 2px;
+        }
+
+        .folder-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #24292f;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .folder-header:hover {
+            background: #f6f8fa;
+        }
+
+        .folder-header i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+            transition: transform 0.2s;
+            color: #57606a;
+        }
+
+        .folder-header .folder-icon {
+            color: #d4a72c;
+        }
+
+        .folder-header.collapsed i.arrow {
+            transform: rotate(-90deg);
+        }
+
+        .folder-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .folder-content.collapsed {
+            max-height: 0 !important;
+        }
+
+        .nav-file {
+            display: flex;
+            align-items: center;
+            padding: 6px 16px 6px 44px;
+            font-size: 13px;
+            color: #57606a;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-file:hover {
+            background: #f6f8fa;
+            color: #24292f;
+        }
+
+        .nav-file.active {
+            background: #ddf4ff;
+            color: #0969da;
+            border-left-color: #0969da;
+            font-weight: 500;
+        }
+
+        .nav-file i {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            height: 52px;
+            background: #fff;
+            border-bottom: 1px solid #d0d7de;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 12px;
+        }
+
+        .menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #57606a;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .menu-btn:hover {
+            background: #f6f8fa;
+        }
+
+        .breadcrumb {
+            flex: 1;
+            font-size: 14px;
+            color: #57606a;
+        }
+
+        .breadcrumb span {
+            margin: 0 4px;
+        }
+
+        .breadcrumb .current {
+            color: #24292f;
+            font-weight: 500;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .toolbar-btn {
+            background: none;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #57606a;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-btn:hover {
+            background: #f6f8fa;
+            color: #24292f;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 48px;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: #d0d7de;
+            border-radius: 4px;
+        }
+
+        .content-area::-webkit-scrollbar-thumb:hover {
+            background: #afb8c1;
+        }
+
+        .markdown-body {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3,
+        .markdown-body h4,
+        .markdown-body h5,
+        .markdown-body h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .markdown-body h1 {
+            font-size: 2em;
+            border-bottom: 1px solid #d0d7de;
+            padding-bottom: 10px;
+        }
+
+        .markdown-body h2 {
+            font-size: 1.5em;
+            border-bottom: 1px solid #d0d7de;
+            padding-bottom: 8px;
+        }
+
+        .markdown-body h3 {
+            font-size: 1.25em;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 2em;
+        }
+
+        .markdown-body li {
+            margin-bottom: 4px;
+        }
+
+        .markdown-body code {
+            background: rgba(175, 184, 193, 0.2);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 85%;
+        }
+
+        .markdown-body pre {
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body pre code {
+            background: none;
+            padding: 0;
+            font-size: 100%;
+        }
+
+        .markdown-body blockquote {
+            border-left: 4px solid #d0d7de;
+            padding: 0 16px;
+            color: #57606a;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body th,
+        .markdown-body td {
+            border: 1px solid #d0d7de;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid #d0d7de;
+            margin: 24px 0;
+        }
+
+        .markdown-body a {
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .welcome-page {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .welcome-page h1 {
+            font-size: 2.5em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-page p {
+            font-size: 16px;
+            color: #57606a;
+            margin-bottom: 32px;
+        }
+
+        .welcome-page .icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            color: #667eea;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #57606a;
+        }
+
+        .loading i {
+            font-size: 32px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #cf222e;
+            background: #ffebe9;
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid #ffcecb;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transform: translateX(-100%);
+                box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .menu-btn {
+                display: block;
+            }
+
+            .content-area {
+                padding: 16px;
+            }
+
+            .markdown-body {
+                padding: 20px;
+            }
+
+            .toolbar {
+                padding: 0 16px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1><i class="fas fa-book-open"></i> 个人笔记</h1>
+            <p>知识整理与分享</p>
+        </div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜索笔记...">
+        </div>
+        <div class="nav-tree" id="navTree"></div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="main-content">
+        <div class="toolbar">
+            <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+            <div class="breadcrumb" id="breadcrumb">
+                <span>首页</span>
+            </div>
+            <div class="toolbar-actions">
+                <button class="toolbar-btn" id="backBtn" title="返回">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button class="toolbar-btn" id="forwardBtn" title="前进">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+        <div class="content-area" id="contentArea">
+            <div class="markdown-body" id="content">
+                <div class="welcome-page">
+                    <div class="icon"><i class="fas fa-book-reader"></i></div>
+                    <h1>欢迎来到我的笔记</h1>
+                    <p>从左侧目录选择一篇笔记开始阅读吧！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="notes-config.js"></script>
+    <script>
+        const navTree = document.getElementById('navTree');
+        const content = document.getElementById('content');
+        const searchInput = document.getElementById('searchInput');
+        const breadcrumb = document.getElementById('breadcrumb');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuBtn = document.getElementById('menuBtn');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+
+        let currentNote = null;
+        let history = [];
+        let historyIndex = -1;
+
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(code, { language: lang }).value;
+                    } catch (e) {}
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        function buildNavTree(folders, container, parentPath = '') {
+            folders.forEach(item => {
+                if (item.type === 'folder') {
+                    const folderDiv = document.createElement('div');
+                    folderDiv.className = 'nav-folder';
+
+                    const header = document.createElement('div');
+                    header.className = 'folder-header';
+                    header.innerHTML = `
+                        <i class="fas fa-chevron-down arrow"></i>
+                        <i class="fas fa-folder folder-icon"></i>
+                        <span>${item.name}</span>
+                    `;
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'folder-content';
+                    contentDiv.style.maxHeight = '1000px';
+
+                    buildNavTree(item.children || [], contentDiv, parentPath + item.name + '/');
+
+                    header.addEventListener('click', () => {
+                        header.classList.toggle('collapsed');
+                        contentDiv.classList.toggle('collapsed');
+                        if (contentDiv.classList.contains('collapsed')) {
+                            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+                            requestAnimationFrame(() => {
+                                contentDiv.style.maxHeight = '0';
+                            });
+                        } else {
+                            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+                            setTimeout(() => {
+                                contentDiv.style.maxHeight = '1000px';
+                            }, 300);
+                        }
+                    });
+
+                    folderDiv.appendChild(header);
+                    folderDiv.appendChild(contentDiv);
+                    container.appendChild(folderDiv);
+                } else if (item.type === 'file') {
+                    const fileDiv = document.createElement('div');
+                    fileDiv.className = 'nav-file';
+                    fileDiv.dataset.path = parentPath + item.name;
+                    fileDiv.dataset.title = item.title || item.name.replace('.md', '');
+                    fileDiv.innerHTML = `
+                        <i class="fas fa-file-alt"></i>
+                        <span>${item.title || item.name.replace('.md', '')}</span>
+                    `;
+
+                    fileDiv.addEventListener('click', () => {
+                        loadNote(fileDiv.dataset.path, fileDiv.dataset.title);
+                        closeSidebarMobile();
+                    });
+
+                    container.appendChild(fileDiv);
+                }
+            });
+        }
+
+        async function loadNote(path, title) {
+            const allFiles = document.querySelectorAll('.nav-file');
+            allFiles.forEach(f => f.classList.remove('active'));
+
+            const activeFile = document.querySelector(`.nav-file[data-path="${path}"]`);
+            if (activeFile) {
+                activeFile.classList.add('active');
+                activeFile.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            content.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+
+            const pathParts = path.split('/');
+            breadcrumb.innerHTML = `<span>首页</span> <span>/</span> <span class="current">${title}</span>`;
+            document.title = title + ' - 个人笔记';
+
+            try {
+                const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+                const response = await fetch(encodedPath);
+                if (!response.ok) {
+                    throw new Error('加载失败: ' + response.status);
+                }
+                const text = await response.text();
+
+                const basePath = path.substring(0, path.lastIndexOf('/') + 1);
+                const processedText = processImagePaths(text, basePath);
+
+                const html = marked.parse(processedText);
+                content.innerHTML = html;
+
+                document.querySelectorAll('#content pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+
+                currentNote = { path, title };
+
+                if (historyIndex < history.length - 1) {
+                    history = history.slice(0, historyIndex + 1);
+                }
+                history.push({ path, title });
+                historyIndex = history.length - 1;
+                updateNavButtons();
+
+                document.getElementById('contentArea').scrollTop = 0;
+            } catch (error) {
+                content.innerHTML = `<div class="error"><i class="fas fa-exclamation-circle"></i> ${error.message}<br><br>请确保笔记文件存在，并且通过本地服务器访问（不要直接双击打开HTML文件）。</div>`;
+            }
+        }
+
+        function processImagePaths(text, basePath) {
+            let result = text.replace(/(!\[.*?\]\()(\.\/|)(.*?)(\))/g, function(match, p1, p2, p3, p4) {
+                if (p3.startsWith('http://') || p3.startsWith('https://')) {
+                    return match;
+                }
+                return p1 + basePath + p3 + p4;
+            });
+
+            result = result.replace(/(<img[^>]*?src=")(\.\/|)(.*?)(")/gi, function(match, p1, p2, p3, p4) {
+                if (p3.startsWith('http://') || p3.startsWith('https://') || p3.startsWith('data:')) {
+                    return match;
+                }
+                return p1 + basePath + p3 + p4;
+            });
+
+            return result;
+        }
+
+        function filterNotes(query) {
+            query = query.toLowerCase();
+            const folders = document.querySelectorAll('.nav-folder');
+            const files = document.querySelectorAll('.nav-file');
+
+            files.forEach(file => {
+                const title = file.querySelector('span').textContent.toLowerCase();
+                const matches = title.includes(query);
+                file.classList.toggle('hidden', !matches && query !== '');
+            });
+
+            folders.forEach(folder => {
+                const visibleFiles = folder.querySelectorAll('.nav-file:not(.hidden)');
+                const visibleFolders = folder.querySelectorAll('.nav-folder:not(.hidden)');
+                const hasVisibleChildren = visibleFiles.length > 0 || visibleFolders.length > 0;
+
+                folder.classList.toggle('hidden', !hasVisibleChildren && query !== '');
+
+                if (query && hasVisibleChildren) {
+                    const header = folder.querySelector('.folder-header');
+                    const contentDiv = folder.querySelector('.folder-content');
+                    header.classList.remove('collapsed');
+                    contentDiv.classList.remove('collapsed');
+                    contentDiv.style.maxHeight = '1000px';
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('open');
+        }
+
+        function closeSidebarMobile() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            }
+        }
+
+        function goBack() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const note = history[historyIndex];
+                loadNoteFromHistory(note.path, note.title);
+            }
+        }
+
+        function goForward() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                const note = history[historyIndex];
+                loadNoteFromHistory(note.path, note.title);
+            }
+        }
+
+        function loadNoteFromHistory(path, title) {
+            const allFiles = document.querySelectorAll('.nav-file');
+            allFiles.forEach(f => f.classList.remove('active'));
+
+            const activeFile = document.querySelector(`.nav-file[data-path="${path}"]`);
+            if (activeFile) {
+                activeFile.classList.add('active');
+            }
+
+            content.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+
+            const pathParts = path.split('/');
+            breadcrumb.innerHTML = `<span>首页</span> <span>/</span> <span class="current">${title}</span>`;
+            document.title = title + ' - 个人笔记';
+
+            fetch(path)
+                .then(response => {
+                    if (!response.ok) throw new Error('加载失败');
+                    return response.text();
+                })
+                .then(text => {
+                    const basePath = path.substring(0, path.lastIndexOf('/') + 1);
+                    const processedText = processImagePaths(text, basePath);
+                    const html = marked.parse(processedText);
+                    content.innerHTML = html;
+
+                    document.querySelectorAll('#content pre code').forEach(block => {
+                        hljs.highlightElement(block);
+                    });
+
+                    currentNote = { path, title };
+                    updateNavButtons();
+                    document.getElementById('contentArea').scrollTop = 0;
+                })
+                .catch(error => {
+                    content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+                });
+        }
+
+        function updateNavButtons() {
+            backBtn.style.opacity = historyIndex > 0 ? '1' : '0.5';
+            forwardBtn.style.opacity = historyIndex < history.length - 1 ? '1' : '0.5';
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            filterNotes(e.target.value);
+        });
+
+        menuBtn.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebarMobile);
+        backBtn.addEventListener('click', goBack);
+        forwardBtn.addEventListener('click', goForward);
+
+        buildNavTree(notesConfig, navTree);
+        updateNavButtons();
+    </script>
+</body>
+</html>
