@@ -1,3 +1,7 @@
+## 资料
+
+[Git是什么 - Git教程 - 廖雪峰的官方网站](https://liaoxuefeng.com/books/git/what-is-git/index.html)
+
 ## git
 
 ### 简介

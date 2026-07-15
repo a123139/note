@@ -297,6 +297,21 @@
             gap: 6px;
         }
 
+        .outline-btn {
+            display: none;
+        }
+
+        .outline-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+
         .toolbar-btn:hover {
             background: #f6f8fa;
             color: #24292f;
@@ -527,6 +542,34 @@
                 display: block;
             }
 
+            .outline-panel {
+                position: fixed;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                width: 280px;
+                transform: translateX(100%);
+                box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+                transition: transform 0.3s ease;
+            }
+
+            .outline-panel.open {
+                transform: translateX(0);
+            }
+
+            .outline-btn {
+                display: block;
+            }
+
+            .outline-overlay {
+                display: none;
+            }
+
+            .outline-overlay.open {
+                display: block;
+            }
+
             .content-area {
                 padding: 16px;
             }
@@ -572,6 +615,9 @@
                 <button class="toolbar-btn" id="forwardBtn" title="前进">
                     <i class="fas fa-arrow-right"></i>
                 </button>
+                <button class="toolbar-btn outline-btn" id="outlineBtn" title="大纲">
+                    <i class="fas fa-list"></i>
+                </button>
             </div>
         </div>
         <div class="content-area" id="contentArea">
@@ -594,6 +640,8 @@
         </div>
     </div>
 
+    <div class="outline-overlay" id="outlineOverlay"></div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="notes-config.js"></script>
@@ -609,6 +657,8 @@
         const forwardBtn = document.getElementById('forwardBtn');
         const outlinePanel = document.getElementById('outlinePanel');
         const outlineTree = document.getElementById('outlineTree');
+        const outlineBtn = document.getElementById('outlineBtn');
+        const outlineOverlay = document.getElementById('outlineOverlay');
 
         let currentNote = null;
         let history = [];
@@ -945,10 +995,22 @@
             filterNotes(e.target.value);
         });
 
+        function toggleOutline() {
+            outlinePanel.classList.toggle('open');
+            outlineOverlay.classList.toggle('open');
+        }
+
+        function closeOutline() {
+            outlinePanel.classList.remove('open');
+            outlineOverlay.classList.remove('open');
+        }
+
         menuBtn.addEventListener('click', toggleSidebar);
         sidebarOverlay.addEventListener('click', closeSidebarMobile);
         backBtn.addEventListener('click', goBack);
         forwardBtn.addEventListener('click', goForward);
+        outlineBtn.addEventListener('click', toggleOutline);
+        outlineOverlay.addEventListener('click', closeOutline);
 
         buildNavTree(notesConfig, navTree);
         updateNavButtons();
