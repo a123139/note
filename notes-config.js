@@ -18,11 +18,28 @@ const notesConfig = [
                 "type": "file",
                 "name": "claude code.md",
                 "title": "claude code"
-            },
+            }
+        ]
+    },
+    {
+        "type": "folder",
+        "name": "git",
+        "children": [
             {
                 "type": "file",
                 "name": "git.md",
                 "title": "git"
+            }
+        ]
+    },
+    {
+        "type": "folder",
+        "name": "python",
+        "children": [
+            {
+                "type": "file",
+                "name": "python.md",
+                "title": "python"
             }
         ]
     },
