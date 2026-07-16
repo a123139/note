@@ -143,9 +143,17 @@ GitHub创建新仓库。克隆到本地`git clone git@github.com:用户名/gitsk
 
 创建+切换分支：`git checkout -b <name>`或者`git switch -c <name>`
 
-合并某分支到当前分支：`git merge <name>`      无分叉/三方分叉
+合并某分支到当前分支：`git merge <name>`  
+
+​		默认  Fast-forward  快进合并，不创建新提交仅指针移动，`git log`无记录
+
+​		加 `--no-ff` 非快进合并，强制生成合并提交，`git log` 有合并记录
+
+​		线性（默认无记录，--no-ff有记录） 有分叉（自动走--no-ff生成合并提交）
 
 删除分支：`git branch -d <name>`   (已合并) 删除分支指针文件，节点依然保留
+
+Bug分支：`git stash `  工作未完成，保存当前分支工作状态
 
 #### 原理
 
@@ -172,8 +180,6 @@ Unmerged paths:
 	both modified:   readme.txt//文件
 	
 直接看readme.txt的内容
-Git is a distributed version control system.
-Git is free software distributed under the GPL.
 Git has a mutable index called stage.
 Git tracks changes of files.
 <<<<<<< HEAD     //Git用<<<<<<<，=======，>>>>>>>标记出不同分支的内容
@@ -192,12 +198,155 @@ git log --graph --pretty=oneline --abbrev-commit
 |/  
 * b17d20e branch test
 * d46f35e (origin/master) remove test.txt
-
 ```
 
-[解决冲突 - Git教程 - 廖雪峰的官方网站](https://liaoxuefeng.com/books/git/branch/merge/index.html)  学到这里了
+#### Bug分支
+
+```
+正在dev工作，未完成。要修复bug任务（新建临时分支修复，合并分支，删除临时分支）
+（dev未完成不想提交，想保存起来）
+Git提供了stash功能，可以储藏/恢复当前工作现场
+
+$ git status//正在dev工作，未完成
+On branch dev
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+	new file:   hello.py
+$ git stash//储藏当前工作现场，用git status查看 干净的
+Saved working directory and index state WIP on dev: f52c633 add merge
+$ git checkout master//先确定在哪个分支上修bug（master）
+$ git checkout -b issue-101//新建临时分支，修复
+$ git add readme.txt 
+$ git commit -m "fix bug 101"
+$ git switch master//切换到master，合并，删除issue-101分支
+$ git merge --no-ff -m "merged bug fix 101" issue-101
+$ git branch -d issue-101
+$ git switch dev//未完成的dev工作分支
+$ git stash list//查看保存的工作现场
+stash@{0}: WIP on dev: f52c633 add merge
+
+用git stash apply恢复，stash内容并不删除，用git stash drop来删除
+用git stash pop，恢复同时把stash内容也删了
+
+$ git stash apply stash@{0}
+----
+问题：master的bug修复了，但dev上也存在同样的bug，怎么做？
+用git cherry-pick <commit>，把bug的提交“复制”到当前分支，避免重复劳动。
+$ git cherry-pick 4c805e2
+[master 1d4b803] fix bug 101 //dev上的bug也修复了
+```
+
+#### 远程协作
+
+`master`分支是主分支，时刻与远程同步
+
+查看远程库信息`git remote -v`
+
+本地无`dev`远程有`dev` ` git checkout -b dev origin/dev` `git switch -c dev origin/dev`
+
+本地有远程无  `git push -u origin feature`
+
+本地有远程有 `git branch --set-upstream-to dev origin/dev`(关联后常规操作 拉取远程更新 `git pull `推送本地提交 `git push`)
+
+#### Rebase
+
+多人协作容易出现冲突。即使没冲突后push的童鞋不得不先pull到本地合并，然后才能push成功。
+
+**merge 是分叉交汇，留下合并记录、历史乱**
+
+**rebase（变基）是把你本地的提交 “剪下来”，贴到远程最新代码后面，历史一条干净直线，会改写本地提交哈希值**
 
 
+
+现在本地和远程不一致，先拉 后提交
+
+```
+1.用git pull（merge方式），Git自动下载远程新提交 f005ed4,然后merge合并生成一条新合并提交
+$ git pull
+* e0ea545 (HEAD -> master) Merge branch 'master' ... #新增的合并提交
+|\ 
+| * f005ed4 (origin/master) set exit=1  # 同事远程提交
+* | 582d922 add author                 # 你的本地提交
+* | 8875536 add comment
+|/ 
+* d1be385 init hello
+
+2.用git rebase把分叉历史拉直,回退本地提交,在远程最新代码重放你的提交,有冲突手动解决，生成全新提交新哈希， log 变成一条直线
+$ git rebase origin/master
+
+$git push
+```
+
+`git pull（默认 merge）`两条分支直接汇合，新增一条**合并提交**；
+
+`git rebase（或 git pull --rebase）`剪切本地提交，贴到远程最新节点后面，本地未推送的提交全部都生成新 id。**改写历史，已经推送到远程的公共分支绝对不能随便 rebase，只能在本地私有未推送分支使用 rebase**
+
+#### 标签
+
+标签是版本库的快照，但其实是指向某个commit的指针（常 ）创建/删除很快。tag是一个让人容易记住的有意义的名字，跟某个commit绑在一起。
+
+“请把上周一的那个版本打包发布，commit号是6a5819e...”
+
+“请把上周一的那个版本打包发布，版本号是v1.2”
+
+```plain
+$ git tag v1.0//默认打在当前分支最新的commit上
+$ git tag v0.9 f52c633//对应的commit id为f52c633的地方
+$ git tag -a v0.1 -m "version 0.1 released" 1094adb//带说明信息
+$ git tag//查看标签 按字母排序
+v0.9
+v1.0
+$ git show v0.9//查看标签信息
+commit f52c63349bc3c1593499807e5c8e972b82c8f286 (tag: v0.9)
+Author: Michael Liao <askxuefeng@gmail.com>
+Date:   Fri May 18 21:56:54 2018 +0800
+    add merge
+diff --git a/readme.txt b/readme.txt
+...
+```
+
+命令`git push origin <tagname>`可以推送一个本地标签；
+
+命令`git push origin --tags`可以推送全部未推送过的本地标签；
+
+命令`git tag -d <tagname>`可以删除一个本地标签；
+
+命令`git push origin :refs/tags/<tagname>`可以删除一个远程标签。
+
+#### 忽略
+
+**`.gitignore`文件**可让 Git 自动忽略指定文件/文件夹。
+
+忽略什么？
+
+系统自动生成文件：Windows 缩略图`Thumbs.db`、`Desktop.ini`等；
+
+**编译**自动生成**产物**：Python `.pyc`、Java `.class`、打包目录`dist/build`等；
+
+含敏感信息的**私有配置**：数据库密码文件、私钥、本地环境配置。
+
+语法：
+
+普通名称 / 通配符......等待略
+
+`!文件名`：**例外规则**。示例：全局忽略所有`.class`，但单独保留`App.class`
+
+```
+*.class
+!App.class
+```
+
+文件被忽略，还是想提交`-f`强制添加` git add -f App.class`
+
+`git check-ignore -v 文件名`，打印忽略该文件的`.gitignore`文件信息
+
+#### 配别名
+
+#### 搭建Git服务器
+
+#### SourecTree
+
+图形化软件
 
 ### 软件安装后
 
