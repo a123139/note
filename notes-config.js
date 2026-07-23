@@ -45,6 +45,17 @@ const notesConfig = [
     },
     {
         "type": "folder",
+        "name": "go",
+        "children": [
+            {
+                "type": "file",
+                "name": "go.md",
+                "title": "go"
+            }
+        ]
+    },
+    {
+        "type": "folder",
         "name": "python",
         "children": [
             {
