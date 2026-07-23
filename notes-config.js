@@ -6,6 +6,17 @@
 
 const notesConfig = [
     {
+        "type": "folder",
+        "name": "C++训练营笔记",
+        "children": [
+            {
+                "type": "file",
+                "name": "基础笔记.md",
+                "title": "基础笔记"
+            }
+        ]
+    },
+    {
         "type": "file",
         "name": "CLAUDE.md",
         "title": "CLAUDE"
